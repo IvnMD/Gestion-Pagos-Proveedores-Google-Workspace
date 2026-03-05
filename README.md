@@ -54,6 +54,9 @@ El cliente detectó que al re-ejecutar el script se duplicaban filas. La soluci�
 
 > **Por qué esto es importante:** antes el script dependía de que el título y la fecha del evento no cambiaran. Con el ID nativo, se puede renombrar o editar el evento en Calendar sin que el script cree una fila duplicada. Es la forma correcta de gestionar sincronizaciones entre sistemas.
 
+### v3.2 — Auto-ordenado y consolidación (Actual)
+Se implementa un sistema de **ordenado automático (sort)** que organiza las facturas por fecha cronológica tras cada ejecución. Se corrigen errores de acumulación de totales, garantizando que el "Total Previsto" sea exacto y exclusivo de cada mes.
+
 ---
 
 ## ⚙️ Instalación y configuración
@@ -104,7 +107,7 @@ El proceso fue el siguiente:
 
 - El **análisis de requisitos**, la **comprensión del flujo de trabajo del cliente** y las **decisiones de diseño** (qué extraer, cómo estructurar la hoja, cómo gestionar los colores de calendario como señal) fueron tomadas de forma autónoma.
 - La IA se utilizó como **par de programación** para agilizar la escritura de código repetitivo, resolver dudas sobre la API de Google Apps Script y recibir consejo en partes que se atragantaban, como la gestión correcta de zonas horarias o la estrategia de detección de duplicados.
-- El **debugging**, la **detección de errores lógicos** (como el problema de duplicados en v3.1 o la variable `totalPrevisto` no declarada) y la **toma de decisiones técnicas** fueron realizados de forma crítica y consciente, usando la IA como herramienta, no como sustituto del criterio propio.
+- El **debugging**, la **detección de errores lógicos** (como el problema de duplicados en v3.1 o o el sistema de ordenado cronológico en v3.2) y la **toma de decisiones técnicas** fueron realizados de forma crítica y consciente, usando la IA como herramienta, no como sustituto del criterio propio.
 
 La IA no sabe qué necesita el cliente. Eso lo sabe el desarrollador.
 
