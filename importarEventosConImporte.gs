@@ -1,20 +1,19 @@
 /**
  * @file importarEventosConImporte.gs
  * @description Script de Google Apps Script que sincroniza eventos del calendario de Google
- *              con una hoja de cálculo de Google Sheets, organizados por mes.
+ * con una hoja de cálculo de Google Sheets, organizados por mes.
  *
- *              Funcionamiento general:
- *              - Lee todos los eventos del año en curso del calendario indicado.
- *              - Filtra únicamente los eventos de color 11 (rojo tomate) o 4 (flamingo),
- *                que representan pagos o vencimientos.
- *              - Para cada mes, crea o actualiza una hoja con las columnas:
- *                FECHA | DESCRIPCIÓN | VENCIMIENTO | IMPORTE (€) | ESTADO | ID (oculta)
- *              - Evita duplicados usando el ID nativo del evento de Google Calendar (columna F, oculta).
- *              - Genera una tabla resumen (columnas G-I) con el total a pagar por día
- *                y el total acumulado de eventos marcados como PAGADO.
- *
- * @version 3.1
- * @see README.md para instrucciones de configuración y uso.
+ * Funcionamiento general:
+ * - Lee todos los eventos del año en curso del calendario indicado.
+ * - Filtra únicamente los eventos de color 11 (rojo tomate) o 4 (flamingo),
+ * que representan pagos o vencimientos.
+ * - Para cada mes, crea o actualiza una hoja con las columnas:
+ * FECHA | DESCRIPCIÓN | VENCIMIENTO | IMPORTE (€) | ESTADO | ID (oculta)
+ * - Evita duplicados usando el ID nativo del evento de Google Calendar (columna F, oculta).
+ * - Genera una tabla resumen (columnas G-I) con el total a pagar por día
+ * y el total acumulado de eventos marcados como PAGADO.
+ * 
+ * @version 3.2
  */
 
 
@@ -22,14 +21,8 @@
 // CONSTANTES DE CONFIGURACIÓN
 // ---------------------------------------------------------------------------
 
-/**
- * ID del calendario de Google desde el que se importan los eventos.
- * Sustitúyelo por el ID de tu propio calendario.
- * Lo encontrarás en Google Calendar → Configuración del calendario → ID del calendario.
- *
- * @example 'nombre@gmail.com' o 'c_xxxxxxxxxxxxxxxx@group.calendar.google.com'
- */
-var CALENDAR_ID = 'TU_CALENDARIO_ID@gmail.com';
+/** ID del calendario de Google desde el que se importan los eventos. */
+var CALENDAR_ID = 'bimotor8@gmail.com';
 
 /** Colores de evento que se importan (11 = rojo tomate, 4 = flamingo). */
 var COLORES_VALIDOS = ["11", "4"];
@@ -66,12 +59,12 @@ var COL_RESUMEN = {
  * Importa y sincroniza los eventos del calendario con la hoja de cálculo.
  *
  * Itera sobre los 12 meses del año en curso. Por cada mes:
- *  1. Obtiene o crea la hoja correspondiente.
- *  2. Lee los IDs de eventos ya existentes (columna F) para evitar duplicados.
- *  3. Filtra los eventos del calendario por mes y color.
- *  4. Inserta filas nuevas o actualiza las existentes según corresponda.
- *  5. Aplica formato condicional al estado (PAGADO / SIN PAGAR).
- *  6. Genera la tabla de totales diarios y el total pagado en columnas G-I.
+ * 1. Obtiene o crea la hoja correspondiente.
+ * 2. Lee los IDs de eventos ya existentes (columna F) para evitar duplicados.
+ * 3. Filtra los eventos del calendario por mes y color.
+ * 4. Inserta filas nuevas o actualiza las existentes según corresponda.
+ * 5. Aplica formato condicional al estado (PAGADO / SIN PAGAR).
+ * 6. Genera la tabla de totales diarios y el total pagado en columnas G-I.
  */
 function importarEventosConImporte() {
   var ss  = SpreadsheetApp.getActiveSpreadsheet();
@@ -98,6 +91,13 @@ function importarEventosConImporte() {
     var eventosDelMes = filtrarEventosPorMesYColor(eventos, indexMes, COLORES_VALIDOS);
 
     sincronizarEventos(hojaMes, eventosDelMes, idsExistentes, tz);
+    
+    // ORDENAR POR FECHA: Evita que los eventos nuevos se queden al final de la lista
+    var ultimaFila = hojaMes.getLastRow();
+    if (ultimaFila > 1) {
+      hojaMes.getRange(2, 1, ultimaFila - 1, COL.ID_EVENTO).sort({column: 1, ascending: true});
+    }
+
     aplicarFormatoCondicional(hojaMes);
     generarTablaResumen(hojaMes, tz);
 
@@ -174,8 +174,8 @@ function leerIdsExistentes(hoja) {
 
 /**
  * Filtra una lista de eventos de calendario quedándose únicamente con los que:
- *  - Pertenecen al mes indicado (indexMes: 0 = enero, 11 = diciembre).
- *  - Tienen un color incluido en la lista de colores válidos.
+ * - Pertenecen al mes indicado (indexMes: 0 = enero, 11 = diciembre).
+ * - Tienen un color incluido en la lista de colores válidos.
  *
  * @param {CalendarEvent[]} eventos        - Lista completa de eventos del año.
  * @param {number}          indexMes       - Índice del mes a filtrar (0-11).
@@ -199,9 +199,9 @@ function filtrarEventosPorMesYColor(eventos, indexMes, coloresValidos) {
  *
  * @param {string} titulo - Título del evento de calendario.
  * @returns {{ importeNum: number, vencimiento: string }}
- *          importeNum:  valor numérico del importe (0 si no se encontró).
- *          vencimiento: texto con formato "DD/MM" precedido de apóstrofo para evitar
- *                       que Sheets lo interprete como fecha, o "-" si no se encontró.
+ * importeNum:  valor numérico del importe (0 si no se encontró).
+ * vencimiento: texto con formato "DD/MM" precedido de apóstrofo para evitar
+ * que Sheets lo interprete como fecha, o "-" si no se encontró.
  */
 function extraerDatosDelTitulo(titulo) {
   var matchImporte     = titulo.match(/(\d+[\.,]\d+)/);
@@ -216,8 +216,8 @@ function extraerDatosDelTitulo(titulo) {
 
 /**
  * Recorre los eventos filtrados del mes y los sincroniza con la hoja:
- *  - Si el ID del evento ya existe en la hoja (columna F), actualiza vencimiento e importe.
- *  - Si no existe, inserta una fila nueva con todos los datos y el ID en columna F.
+ * - Si el ID del evento ya existe en la hoja (columna F), actualiza vencimiento e importe.
+ * - Si no existe, inserta una fila nueva con todos los datos y el ID en columna F.
  *
  * Usa un contador de fila local (en lugar de llamar a getLastRow() en cada iteración)
  * para minimizar llamadas a la API de Sheets y mejorar el rendimiento.
@@ -270,8 +270,8 @@ function sincronizarEventos(hoja, eventos, idsExistentes, tz) {
 
 /**
  * Aplica (o reaplica) las reglas de formato condicional a la columna ESTADO:
- *  - "SIN PAGAR" → fondo rojo claro (#ffcfc9).
- *  - "PAGADO"    → fondo verde claro (#d4edbc).
+ * - "SIN PAGAR" → fondo rojo claro (#ffcfc9).
+ * - "PAGADO"    → fondo verde claro (#d4edbc).
  *
  * Limpia las reglas existentes antes de aplicar las nuevas para evitar acumulación
  * en cada ejecución del script.
@@ -295,10 +295,10 @@ function aplicarFormatoCondicional(hoja) {
 
 /**
  * Genera la tabla resumen en las columnas G-I de la hoja:
- *  - Columna G: fechas únicas de pago.
- *  - Columna H: suma de importes de todos los eventos de esa fecha (total a pagar ese día).
- *  - Columna I (fila 2): suma acumulada de importes con estado "PAGADO" en el mes.
- *  - Columna I (fila 4): suma total prevista del mes (todos los importes, independiente del estado).
+ * - Columna G: fechas únicas de pago.
+ * - Columna H: suma de importes de todos los eventos de esa fecha (total a pagar ese día).
+ * - Columna I (solo fila 2): suma acumulada de importes con estado "PAGADO" en el mes.
+ * - Columna I (fila 4): suma total prevista del mes (todos los importes, independiente del estado).
  *
  * La tabla se regenera completamente en cada ejecución para reflejar cambios de estado.
  *
@@ -321,7 +321,7 @@ function generarTablaResumen(hoja, tz) {
 
   var totalesDiarios = {};
   var totalPagado    = 0;
-  var totalPrevisto  = 0;
+  var totalPrevisto  = 0; // Inicializado para sumar correctamente
 
   datos.forEach(function(fila) {
     var celdaFecha = fila[COL.FECHA - 1];
@@ -330,6 +330,9 @@ function generarTablaResumen(hoja, tz) {
 
     if (!celdaFecha || !importe) return;
 
+    // Sumamos al total previsto general del mes
+    totalPrevisto += importe;
+
     // Normalizamos la clave de fecha siempre a texto formateado
     var fKey = (celdaFecha instanceof Date)
       ? Utilities.formatDate(celdaFecha, tz, "dd/MM/yyyy")
@@ -337,9 +340,6 @@ function generarTablaResumen(hoja, tz) {
 
     // Total del día: suma todos los eventos del día independientemente del estado
     totalesDiarios[fKey] = (totalesDiarios[fKey] || 0) + importe;
-
-    // Total previsto del mes: suma todos los importes sin filtrar por estado
-    totalPrevisto += importe;
 
     // Total pagado del mes
     if (estado === "PAGADO") {
@@ -360,7 +360,8 @@ function generarTablaResumen(hoja, tz) {
   hoja.getRange(2, COL_RESUMEN.TOTAL_PAGADO)
     .setValue(totalPagado)
     .setNumberFormat("#,##0.00\" €\"")
-    .setBackground("#d4edbc");
+    .setBackground("#d4edbc")
+    .setFontWeight("bold");
 
   // Total Previsto (Suma total del mes)
   hoja.getRange(3, COL_RESUMEN.TOTAL_PAGADO).setValue("TOTAL PREVISTO").setFontWeight("bold").setBackground("#cfe2f3");
