@@ -107,7 +107,7 @@ El proceso fue el siguiente:
 
 - El **análisis de requisitos**, la **comprensión del flujo de trabajo del cliente** y las **decisiones de diseño** (qué extraer, cómo estructurar la hoja, cómo gestionar los colores de calendario como señal) fueron tomadas de forma autónoma.
 - La IA se utilizó como **par de programación** para agilizar la escritura de código repetitivo, resolver dudas sobre la API de Google Apps Script y recibir consejo en partes que se atragantaban, como la gestión correcta de zonas horarias o la estrategia de detección de duplicados.
-- El **debugging**, la **detección de errores lógicos** (como el problema de duplicados en v3.1 o o el sistema de ordenado cronológico en v3.2) y la **toma de decisiones técnicas** fueron realizados de forma crítica y consciente, usando la IA como herramienta, no como sustituto del criterio propio.
+- El **debugging**, la **detección de errores lógicos** (como el problema de duplicados en v3.1 o el sistema de ordenado cronológico en v3.2) y la **toma de decisiones técnicas** fueron realizados de forma crítica y consciente, usando la IA como herramienta, no como sustituto del criterio propio.
 
 La IA no sabe qué necesita el cliente. Eso lo sabe el desarrollador.
 
