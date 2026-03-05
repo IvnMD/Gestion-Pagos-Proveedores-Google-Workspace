@@ -4,6 +4,18 @@ Historial de cambios del proyecto **Google Calendar → Sheets: Gestión de Pago
 
 ---
 
+## [3.2] - Auto-ordenado y consolidación de totales
+
+### Añadido
+- **Sistema de Auto-ordenado:** El script ahora ordena automáticamente la hoja por fecha (Columna A) después de cada sincronización. Esto garantiza que los eventos nuevos no se queden al final de la lista, manteniendo siempre una cronología lógica.
+- **Visualización de Total Previsto:** Se ha integrado en la tabla resumen (Celda I4) el sumatorio total de todos los gastos previstos del mes (pagados y no pagados), permitiendo comparar el gasto total frente a lo ya pagado (Celda I2).
+
+### Mejoras técnicas
+- **Reset de acumuladores:** Se ha asegurado que las variables de totales (`totalPagado` y `totalPrevisto`) se inicialicen a cero al procesar cada mes, evitando que se arrastren sumas de meses anteriores.
+- **Robustez en la Tabla Resumen:** Limpieza total de formatos y contenido en las columnas G-I antes de cada regeneración para evitar restos de datos de ejecuciones previas.
+
+---
+
 ## [3.1] - Corrección de duplicados
 
 ### Problema detectado
